@@ -40,6 +40,12 @@ One line per dataset. `source` is one of:
 - `'ts'`: `.ts` files you downloaded yourself, with `path` = folder containing `<name>_TRAIN.ts` and `<name>_TEST.ts`
 - `'numpy'`: your own files, with `path` = folder containing `X_train.npy, y_train.npy, X_test.npy, y_test.npy`
   (or only `X.npy, y.npy`). On Kaggle, upload the folder as a dataset (Add Input) and use its `/kaggle/input/...` path.
+- `'pt'`: `path` = folder with `train.pt` and `test.pt` (dicts with `samples` and `labels`, TF-C / UniTS style)
+- `'woods'`: `path` = a WOODS `.h5` file (HHAR, PCL, SEDFx). Add `split='ID'` (all domains merged, 63.75% / 25% split
+  with seed 0, as we did for CAP-ID) or `split='OOD', train_domains=[...], test_domains=[...]`.
+  The log prints the domain names found in the file.
+
+Which source to use for each of the 18 paper datasets: see `kit/DATASETS_1-18.md` in the repo.
 
 `paper` = accuracy of MantisV2 in the paper for that dataset (optional, just stored next to our numbers).
 `methods = None` runs everything: rf, logreg, head, mixer, pool, pool_mixer, lora.
@@ -50,6 +56,8 @@ DATASETS = [
     dict(name='BasicMotions', source='uea', paper=None),
     # dict(name='SleepEEG', source='tfc', paper=None),
     # dict(name='MyData', source='numpy', path='/kaggle/input/my-data', paper=None),
+    # dict(name='PCL-OOD', source='woods', path='/tmp/data/PCL.h5', split='OOD',
+    #      train_domains=['<name from log>'], test_domains=['<name from log>'], paper=0.5311),
 ]
 methods = None          # or e.g. ['rf', 'mixer', 'lora']
 QUICK = False
@@ -65,8 +73,9 @@ DATA = '/tmp/data'          # downloads go here, not into the saved output
 frames = []
 for d in DATASETS:
     try:
+        extra = {k: v for k, v in d.items() if k not in ('name', 'source', 'path', 'paper')}
         frames.append(kit.run(d['name'], d['source'], d.get('path'), methods, out_dir=OUT, data_dir=DATA,
-                              quick=QUICK, paper=d.get('paper')))
+                              quick=QUICK, paper=d.get('paper'), **extra))
     except Exception as e:
         print('FAILED', d['name'], type(e).__name__, e)
 if frames:

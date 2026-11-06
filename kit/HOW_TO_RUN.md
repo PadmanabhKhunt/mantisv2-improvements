@@ -1,5 +1,8 @@
 # How to run MantisV2 and our improvements on your datasets
 
+**Aadil (datasets 1–6) and Praneet (13–18): read [`DATASETS_1-18.md`](DATASETS_1-18.md) first.** It lists your
+datasets, which `source` to use for each, and ready-to-paste notebook lines.
+
 This kit runs the paper baseline and all three improvements on any classification dataset, with the same settings we
 used for datasets 7–12. You only change the dataset names. You do not need a GPU on your laptop: the free Kaggle (or
 Colab) GPU is enough.
@@ -49,6 +52,8 @@ The CSVs appear in the `results` folder in the file panel on the left.
 | A dataset on timeseriesclassification.com (UEA multivariate or UCR univariate) | `'uea'` | the exact name on the site, e.g. `'Blink'`, `'ECG200'`, `'BasicMotions'` |
 | TF-C preprocessed data (used by the paper for HAR / EEG) | `'tfc'` | `'SleepEEG'`, `'Epilepsy'`, `'FD-A'`, `'FD-B'`, `'HAR'`, `'Gesture'`, `'EMG'`, `'ECG'` |
 | A UEA/UCR zip you downloaded yourself (unzipped) | `'ts'` | `name` as above, `path` = the unzipped folder |
+| `train.pt` / `test.pt` with `samples` and `labels` (TF-C / UniTS style) | `'pt'` | `path` = the folder |
+| A WOODS benchmark `.h5` file (HHAR, PCL, SEDFx, CAP) | `'woods'` | `path` = the `.h5` file, plus `split='ID'` or `split='OOD', train_domains=[...], test_domains=[...]` |
 | Anything else | `'numpy'` | `path` = a folder with `X_train.npy`, `y_train.npy`, `X_test.npy`, `y_test.npy` |
 
 For your own data, save numpy arrays like this:

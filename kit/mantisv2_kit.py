@@ -13,6 +13,7 @@ Command line:
     python kit/mantisv2_kit.py --dataset Blink --source uea
     python kit/mantisv2_kit.py --dataset SleepEEG --source tfc --methods rf mixer lora
     python kit/mantisv2_kit.py --dataset MyData --source numpy --path data/MyData
+    python kit/mantisv2_kit.py --dataset PCL-OOD --source woods --path PCL.h5 --split OOD         --train-domains Cho2017 --test-domains Lee2019_MI
 
 From a notebook:
     from mantisv2_kit import run
@@ -143,7 +144,59 @@ def load_numpy(path):
     return {'train': (X[tr], y[tr]), 'test': (X[te], y[te])}
 
 
-def load_dataset(name, source, path=None, data_dir='data'):
+def load_pt(path):
+    """A folder with train.pt and test.pt, each a dict with 'samples' (N, C, T) and 'labels' (TF-C / UniTS style)."""
+    out = {}
+    for split in ['train', 'test']:
+        d = torch.load(os.path.join(path, f'{split}.pt'), weights_only=False)
+        out[split] = (np.asarray(d['samples'], dtype=np.float32), np.asarray(d['labels']))
+    return out
+
+
+def load_woods(path, split='ID', train_domains=None, test_domains=None, channels_last=None):
+    """A WOODS benchmark .h5 file (HHAR, PCL, SEDFx, CAP): one group per domain, each with 'data' and 'labels'.
+    split='ID'  : all domains merged, shuffled with seed 0, first 63.75% train and last 25% test
+                  (the 11.25% in between is the unused validation part) - exactly as we did for CAP-ID.
+    split='OOD' : train on train_domains, test on test_domains (the paper's domain split; validation domain unused).
+    Series are resized to 512 steps while reading, so even very large files fit in memory."""
+    import h5py
+    with h5py.File(path, 'r') as h:
+        domains = sorted(h.keys())
+        log(f'{os.path.basename(path)} domains: {domains}')
+        if split == 'OOD':
+            missing = [m for m in (train_domains or []) + (test_domains or []) if m not in domains]
+            if missing or not train_domains or not test_domains:
+                raise ValueError(f'for OOD give train_domains and test_domains from this list: {domains} '
+                                 f'(not found: {missing})')
+        Xs, ys, dom = [], [], []
+        for k, m in enumerate(domains):
+            if split == 'OOD' and m not in train_domains + test_domains:
+                continue
+            data, parts = h[f'{m}/data'], []
+            last = channels_last if channels_last is not None else data.shape[1] > data.shape[2]
+            for s in range(0, data.shape[0], 2000):
+                x = data[s:s + 2000]
+                parts.append(resize(np.transpose(x, (0, 2, 1)) if last else x))
+            labels = h[f'{m}/labels'][:]
+            labels = labels.argmax(1) if labels.ndim == 2 and labels.shape[1] > 1 else labels.ravel()
+            Xs.append(np.concatenate(parts))
+            ys.append(labels)
+            dom += [m] * len(labels)
+            log(f'  {m}: {Xs[-1].shape[0]} samples, {Xs[-1].shape[1]} channels')
+    X, y, dom = np.concatenate(Xs), np.concatenate(ys), np.asarray(dom)
+    if split == 'ID':
+        N = len(y)
+        perm = np.random.RandomState(0).permutation(N)
+        tr, te = perm[:int(0.6375 * N)], perm[N - int(round(0.25 * N)):]
+    else:
+        tr, te = np.where(np.isin(dom, train_domains))[0], np.where(np.isin(dom, test_domains))[0]
+    return {'train': (X[tr], y[tr]), 'test': (X[te], y[te])}
+
+
+SOURCES = ['uea', 'tfc', 'ts', 'numpy', 'pt', 'woods']
+
+
+def load_dataset(name, source, path=None, data_dir='data', **kw):
     os.makedirs(data_dir, exist_ok=True)
     if source == 'uea':
         d = load_uea(name, data_dir)
@@ -153,10 +206,16 @@ def load_dataset(name, source, path=None, data_dir='data'):
         d = load_ts_folder(name, path or os.path.join(data_dir, name))
     elif source == 'numpy':
         d = load_numpy(path or os.path.join(data_dir, name))
+    elif source == 'pt':
+        d = load_pt(path or os.path.join(data_dir, name))
+    elif source == 'woods':
+        d = load_woods(path, **kw)
     else:
-        raise ValueError("source must be 'uea', 'tfc', 'ts' or 'numpy'")
+        raise ValueError(f'source must be one of {SOURCES}')
     for k, (X, y) in d.items():
-        X = np.asarray(X, dtype=np.float32)
+        X = np.asarray(X)
+        if X.dtype != np.float16:
+            X = X.astype(np.float32)
         if X.ndim == 2:
             X = X[:, None, :]
         d[k] = (X, np.asarray(y).ravel())
@@ -356,9 +415,10 @@ def settings(n_train, quick=False):
 # ============================================================================ main entry point
 
 def run(dataset, source='uea', path=None, methods=None, seeds=SEEDS, out_dir='results', data_dir='data',
-        quick=False, paper=None):
+        quick=False, paper=None, **load_kw):
     """Run the chosen methods on one dataset and save results/<dataset>_results.csv.
-    paper: optional accuracy reported in the MantisV2 paper, added to the table for comparison."""
+    paper: optional accuracy reported in the MantisV2 paper, added to the table for comparison.
+    load_kw: extra loader options, for source='woods': split ('ID'/'OOD'), train_domains, test_domains."""
     methods = methods or ALL_METHODS
     os.makedirs(out_dir, exist_ok=True)
     csv = os.path.join(out_dir, f'{dataset}_results.csv')
@@ -366,7 +426,7 @@ def run(dataset, source='uea', path=None, methods=None, seeds=SEEDS, out_dir='re
     log(f'{dataset}: device {DEVICE}' + (f' ({torch.cuda.get_device_name(0)})' if DEVICE == 'cuda' else
                                           ' - no GPU, the trained methods will be slow'))
 
-    d = load_dataset(dataset, source, path, data_dir)
+    d = load_dataset(dataset, source, path, data_dir, **load_kw)
     (Xa, ya), (Xb, yb) = d['train'], d['test']
     le = LabelEncoder().fit(np.concatenate([ya, yb]))
     y = le.transform(np.concatenate([ya, yb]))
@@ -469,8 +529,11 @@ def run(dataset, source='uea', path=None, methods=None, seeds=SEEDS, out_dir='re
 if __name__ == '__main__':
     p = argparse.ArgumentParser(description='Run MantisV2 baseline + our improvements on one dataset.')
     p.add_argument('--dataset', required=True, help="dataset name, e.g. Blink (uea), SleepEEG (tfc), or your folder name")
-    p.add_argument('--source', default='uea', choices=['uea', 'tfc', 'ts', 'numpy'])
-    p.add_argument('--path', help='folder with the .npy files (source numpy) or the .ts files (source ts)')
+    p.add_argument('--source', default='uea', choices=SOURCES)
+    p.add_argument('--path', help='folder (numpy, ts, pt) or .h5 file (woods)')
+    p.add_argument('--split', default='ID', choices=['ID', 'OOD'], help='woods only')
+    p.add_argument('--train-domains', nargs='+', help='woods OOD only')
+    p.add_argument('--test-domains', nargs='+', help='woods OOD only')
     p.add_argument('--methods', nargs='+', default=ALL_METHODS, choices=ALL_METHODS)
     p.add_argument('--seeds', nargs='+', type=int, default=list(SEEDS))
     p.add_argument('--paper', type=float, help='accuracy reported in the paper, stored in the CSV')
@@ -478,4 +541,5 @@ if __name__ == '__main__':
     p.add_argument('--data-dir', default='data')
     p.add_argument('--quick', action='store_true', help='1-3 epochs only, to check that everything runs')
     a = p.parse_args()
-    run(a.dataset, a.source, a.path, a.methods, a.seeds, a.out, a.data_dir, a.quick, a.paper)
+    kw = dict(split=a.split, train_domains=a.train_domains, test_domains=a.test_domains) if a.source == 'woods' else {}
+    run(a.dataset, a.source, a.path, a.methods, a.seeds, a.out, a.data_dir, a.quick, a.paper, **kw)

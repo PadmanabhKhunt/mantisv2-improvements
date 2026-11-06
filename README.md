@@ -15,6 +15,9 @@ still to run.
 
 ## Run it on your datasets (group members start here)
 
+Split of the 18 paper datasets (Tables 2 and 3, in order): **Aadil 1–6**, **Padmanabh 7–12 (done)**, **Praneet 13–18**.
+Which source to use for each dataset, with ready-to-paste notebook lines: **[`kit/DATASETS_1-18.md`](kit/DATASETS_1-18.md)**.
+
 Everything is in **[`kit/`](kit/)**, and the step-by-step guide is **[`kit/HOW_TO_RUN.md`](kit/HOW_TO_RUN.md)**. In short:
 
 1. Download `kit/MantisV2_Kit_Kaggle.ipynb`, import it into Kaggle, and turn on GPU and Internet.
@@ -22,8 +25,8 @@ Everything is in **[`kit/`](kit/)**, and the step-by-step guide is **[`kit/HOW_T
 3. Upload the result CSVs to `results/members/<your name>/`. Then `python kit/combine_results.py` builds the 12-dataset table.
 
 The kit runs the paper baseline (`rf`) and all improvements with the same settings as our runs. It accepts UEA/UCR
-datasets by name, the TF-C datasets (SleepEEG, Epilepsy, FD-A/B, HAR, Gesture, EMG, ECG), `.ts` files, or your own
-numpy arrays.
+datasets by name, the TF-C datasets, WOODS `.h5` files (with the paper's ID and OOD splits), `.ts`/`.pt` files, or your
+own numpy arrays.
 
 ## Results so far (datasets 7–12, accuracy, mean of 3 seeds)
 
@@ -47,6 +50,7 @@ kit/                           ready-to-use version of everything, for any datas
   mantisv2_kit.py              all methods + data loaders + training (also a command-line tool)
   MantisV2_Kit_Kaggle.ipynb    upload to Kaggle/Colab, edit one cell, run
   HOW_TO_RUN.md                step-by-step guide
+  DATASETS_1-18.md             the 18 datasets, who runs which, how to load each
   combine_results.py           merges everyone's CSVs into one table
   make_notebook.py             rebuilds the notebook after changes to mantisv2_kit.py
 reproduction/
