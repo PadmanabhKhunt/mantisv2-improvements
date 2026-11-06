@@ -13,6 +13,18 @@ model with three changes on top of the pretrained encoder:
 Status: datasets 7–12 (UCI-HAR, Blink, CAP-ID, CAP-OOD, Epilepsy-EEG, FingerMovements) are done. Datasets 1–6 are
 still to run.
 
+## Run it on your datasets (group members start here)
+
+Everything is in **[`kit/`](kit/)**, and the step-by-step guide is **[`kit/HOW_TO_RUN.md`](kit/HOW_TO_RUN.md)**. In short:
+
+1. Download `kit/MantisV2_Kit_Kaggle.ipynb`, import it into Kaggle, and turn on GPU and Internet.
+2. Put your dataset names in the "YOUR DATASETS" cell, then **Save & Run All**.
+3. Upload the result CSVs to `results/members/<your name>/`. Then `python kit/combine_results.py` builds the 12-dataset table.
+
+The kit runs the paper baseline (`rf`) and all improvements with the same settings as our runs. It accepts UEA/UCR
+datasets by name, the TF-C datasets (SleepEEG, Epilepsy, FD-A/B, HAR, Gesture, EMG, ECG), `.ts` files, or your own
+numpy arrays.
+
 ## Results so far (datasets 7–12, accuracy, mean of 3 seeds)
 
 | Dataset | Paper (MantisV2 + RF) | Our reproduction | Mixer v2 (idea 1) | Learned pooling (idea 2) | Idea 2 + mixer | LoRA + mixer (idea 3) |
@@ -31,6 +43,12 @@ LoRA on CAP ran only 4 epochs to fit the free GPU. Full numbers, standard deviat
 ## Repository layout
 
 ```
+kit/                           ready-to-use version of everything, for any dataset
+  mantisv2_kit.py              all methods + data loaders + training (also a command-line tool)
+  MantisV2_Kit_Kaggle.ipynb    upload to Kaggle/Colab, edit one cell, run
+  HOW_TO_RUN.md                step-by-step guide
+  combine_results.py           merges everyone's CSVs into one table
+  make_notebook.py             rebuilds the notebook after changes to mantisv2_kit.py
 reproduction/
   reproduce_mantisv2.py        standalone script: frozen MantisV2 + Random Forest, datasets 7-12
   MantisV2_Reproduction_*.ipynb/.html/.pdf   executed notebook (Kaggle run)
@@ -42,6 +60,8 @@ improvements/
     3_idea2_cap_and_lora.py    learned pooling on CAP + LoRA on all six datasets
   runs/                        executed notebooks (.ipynb/.html/.pdf) and CSV for each run
 results/                       all result CSVs in one place
+  datasets_7_12_kit_results.csv   our datasets 7-12 in the kit's format
+  members/                     each member's CSVs go here
 ```
 
 ## How to run
