@@ -263,7 +263,7 @@ def tokens(Xr, bs=1024):
     net = encoder()
     N, C, _ = Xr.shape
     flat = Xr.reshape(N * C, 1, 512)
-    out = []
+    out = np.empty((N * C, 6, 5, 256), dtype=np.float16)  # filled in place: a list + concatenate needs 2x the RAM
     for i in range(0, N * C, bs):
         h = net.tokgen_unit(torch.from_numpy(flat[i:i + bs]).to(DEVICE).float())
         h = torch.cat([h, net.transf_unit.cls_token.expand(h.shape[0], 1, -1)], 1)[:, None]
@@ -272,8 +272,8 @@ def tokens(Xr, bs=1024):
             h = layer(h)
             t = h[:, 0]
             layers.append(torch.cat([t[:, 32:], t[:, :32].reshape(-1, 4, 8, 256).mean(2)], 1))
-        out.append(torch.stack(layers, 1).half().cpu().numpy())
-    return np.concatenate(out).reshape(N, C, 6, 5, 256)
+        out[i:i + bs] = torch.stack(layers, 1).half().cpu().numpy()
+    return out.reshape(N, C, 6, 5, 256)
 
 
 # ============================================================================ models
@@ -360,6 +360,13 @@ def fit(model, A, y, tr_idx, te_idx, seed, epochs, patience, bs, lr=1e-3, amp=Fa
     """One training loop for every model: AdamW, cosine schedule, label smoothing 0.1,
     20% of the training split held out for early stopping. Returns (test accuracy, epochs run)."""
     amp = amp and DEVICE == 'cuda'
+    pb = 256  # prediction batch (samples)
+    if isinstance(model, LoraModel):
+        # LoRA runs the encoder on batch x channels series, so cap both batches by the number of channels
+        # (otherwise datasets with 30-50 channels run out of GPU memory on a 16 GB T4)
+        C = A.shape[1]
+        bs = max(4, min(bs, 1280 // C))
+        pb = max(8, min(256, 4096 // C))
     fit_idx, va_idx = train_test_split(tr_idx, test_size=0.2, stratify=y[tr_idx], random_state=seed)
     params = [p for p in model.parameters() if p.requires_grad]
     opt = torch.optim.AdamW(params, lr=lr, weight_decay=0.05)
@@ -371,8 +378,8 @@ def fit(model, A, y, tr_idx, te_idx, seed, epochs, patience, bs, lr=1e-3, amp=Fa
         model.eval()
         preds = []
         with torch.no_grad(), torch.autocast(DEVICE, dtype=torch.float16, enabled=amp):
-            for i in range(0, len(idx), 256):
-                preds.append(model(batch(idx[i:i + 256])).argmax(1).cpu().numpy())
+            for i in range(0, len(idx), pb):
+                preds.append(model(batch(idx[i:i + pb])).argmax(1).cpu().numpy())
         return np.concatenate(preds)
 
     best, best_state, wait = -1, None, 0
@@ -479,6 +486,7 @@ def run(dataset, source='uea', path=None, methods=None, seeds=SEEDS, out_dir='re
             clf = LogisticRegression(max_iter=500).fit(sc.transform(Zflat[tr]), y[tr])
             record('logreg', [float(np.mean(clf.predict(sc.transform(Zflat[te])) == y[te]))], t0)
         safe(m)
+    Zflat = None  # free the RAM before the token step
 
     def heads(name, A, make, cfg, extra_fn, amp=False):
         def m():

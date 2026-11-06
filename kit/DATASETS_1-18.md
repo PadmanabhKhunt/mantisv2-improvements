@@ -1,5 +1,10 @@
 # The 18 datasets and who runs them
 
+> **Update (7 Nov 2026):** to finish the project on time, Padmanabh ran all available datasets himself with
+> `kit/run_datasets_1-6_13-18_kaggle.py` on Kaggle. All results are in `results/` and `results/RESULTS.md`.
+> Only **Ego4D is not run**: it needs a signed licence agreement, so it is not freely downloadable.
+> The sources below are the ones actually used; the domain names are the real ones in the WOODS files.
+
 The 18 datasets are the rows of the MantisV2 paper's Table 2 (HAR) and Table 3 (EEG), in order. Shapes come from
 Tables 5 and 6 (Appendix A.1). `paper` is the MantisV2 column of Tables 2 and 3: put it in the notebook so it shows next
 to our numbers.
@@ -7,11 +12,11 @@ to our numbers.
 | # | Dataset | Who | Channels × length | Train / test | Classes | Paper (MantisV2) | Kit `source` |
 |---|---|---|---|---|---|---|---|
 | 1 | Ego4D | Aadil | 6 × 1000 | 247,095 / 66,994 | 31 | 0.5258 | `numpy` |
-| 2 | EMOPain | Aadil | 30 × 200 | 968 / 355 | 3 | 0.8798 | `numpy` or `pt` |
+| 2 | EMOPain | Aadil | 30 × 200 | 968 / 355 | 3 | 0.8798 | `uea` (on timeseriesclassification.com) |
 | 3 | HHAR-ID | Aadil | 6 × 500 | 8,716 / 3,419 | 6 | 0.9845 | `woods`, `split='ID'` |
 | 4 | HHAR-OOD | Aadil | 6 × 500 | 11,150 / 2,154 | 6 | 0.5822 | `woods`, `split='OOD'` |
-| 5 | MP8 | Aadil | 8 × 161 | 1,426 / 595 | 4 | 0.6857 | `numpy` |
-| 6 | MP50 | Aadil | 50 × 161 | 1,426 / 595 | 4 | 0.7345 | `numpy` |
+| 5 | MP8 | Aadil | 8 × 161 | 1,426 / 595 | 4 | 0.6857 | `numpy` (from FM4MTSC, see below) |
+| 6 | MP50 | Aadil | 50 × 161 | 1,426 / 595 | 4 | 0.7345 | `numpy` (from FM4MTSC, see below) |
 | 7 | UCI-HAR | Padmanabh ✅ | 3 × 206 | 5,881 / 2,947 | 6 | 0.9013 | `tfc` (`'HAR'`) |
 | 8 | Blink | Padmanabh ✅ | 4 × 510 | 500 / 450 | 2 | 0.9956 | `uea` |
 | 9 | CAP-ID | Padmanabh ✅ | 19 × 3000 | 25,748 / 10,098 | 6 | 0.8152 | `woods`, `split='ID'` |
@@ -64,7 +69,9 @@ np.save('X_test.npy',  X_test.astype('float32'));  np.save('y_test.npy',  y_test
 ### WOODS datasets (HHAR, PCL, SEDFx)
 
 These come from the WOODS benchmark (github.com/jc-audet/WOODS). Its `woods/download.py` lists where each `.h5` file
-is. We used the same approach for CAP: `improvements/code/3_idea2_cap_and_lora.py`, cell 4, downloads the file with
+is: Google Drive ids `1Z3IcrCE-o77p4YrvkCy-Y-0CgCyxVHet` (HHAR), `118DNxHpzeJwVTM22wzZhSiOuDsno0nay` (PCL),
+`15j_bsiOmMJb42mG712Vhv3jZ4MQSOgoT` (SEDFx). Domains: HHAR `nexus4, s3, s3mini, lgwatch, gear`; PCL
+`PhysionetMI, Cho2017, Lee2019_MI`; SEDFx `Age 20-40, Age 40-60, Age 60-80, Age 80-100`. We used the same approach for CAP: `improvements/code/3_idea2_cap_and_lora.py`, cell 4, downloads the file with
 `gdown` into `/tmp/data` and unzips it.
 
 - **ID split:** the kit merges all domains, shuffles them with seed 0, and takes the first 63.75% as train and the last 25% as test. This is exactly what we did for CAP-ID; the paper gives no seed.
@@ -77,7 +84,7 @@ is. We used the same approach for CAP: `improvements/code/3_idea2_cap_and_lora.p
 ```python
 DATASETS = [
     dict(name='Ego4D',    source='numpy', path='/kaggle/input/<ego4d-folder>', paper=0.5258),
-    dict(name='EMOPain',  source='numpy', path='/kaggle/input/<emopain-folder>', paper=0.8798),
+    dict(name='EMOPain',  source='uea', paper=0.8798),
     dict(name='HHAR-ID',  source='woods', path='/tmp/data/<HHAR file>.h5', split='ID', paper=0.9845),
     dict(name='HHAR-OOD', source='woods', path='/tmp/data/<HHAR file>.h5', split='OOD',
          train_domains=['nexus4', 's3', 's3mini'], test_domains=['lgwatch'], paper=0.5822),
@@ -92,9 +99,9 @@ DATASETS = [
     - version 2: `methods = ['head', 'mixer']`;
     - version 3: `methods = ['lora']`.
   - `pool` is skipped automatically, because its tokens would need about 28 GB of RAM.
-- **EMOPain:** the paper downloads it with the script from Gao et al. (2024), the UniTS repository. If that gives `.pt` files with `samples`/`labels`, use `source='pt'`; otherwise convert to numpy.
+- **EMOPain:** the paper downloads it with the UniTS script (Gao et al. 2024), which fetches `EMOPain.zip` from timeseriesclassification.com, so `source='uea'` gives the same data.
 - **HHAR-ID / HHAR-OOD:** one WOODS file gives both. The paper's OOD split is train on "nexus4", "s3" and "s3mini", test on "lgwatch". Check the exact names in the log.
-- **MP8 / MP50:** Military Press, in the versions by Sungu Isiacik et al. (2025). MP8 has 8 key body points and MP50 has all 50 coordinates. Same samples, so they share the split.
+- **MP8 / MP50:** Military Press, in the versions by Sungu Isiacik et al. (2025). MP8 has 8 key body points and MP50 has all 50 coordinates. Same samples, so they share the split. Their repository (github.com/mlgig/FM4MTSC) links a public Google Drive folder (id `10Hvep0hk9naj_nRk4JMiXHMeV1vw0lcd`) with `MP8.npy` and `MP50.npy`. Each is a dict `{'train': {'X', 'y'}, 'test': {...}}` with exactly the paper's shapes; the runner script converts them to the kit's numpy format.
 
 ## Praneet: datasets 13–18
 
@@ -104,10 +111,10 @@ DATASETS = [
     dict(name='SelfRegulationSCP2', source='uea', paper=0.5167),
     dict(name='PCL-ID',    source='woods', path='/tmp/data/<PCL file>.h5', split='ID', paper=0.5716),
     dict(name='PCL-OOD',   source='woods', path='/tmp/data/<PCL file>.h5', split='OOD',
-         train_domains=['<Cho2017>'], test_domains=['<Lee2019MI>'], paper=0.5311),
+         train_domains=['Cho2017'], test_domains=['Lee2019_MI'], paper=0.5311),
     dict(name='SEDFx-ID',  source='woods', path='/tmp/data/<SEDFx file>.h5', split='ID', paper=0.8000),
     dict(name='SEDFx-OOD', source='woods', path='/tmp/data/<SEDFx file>.h5', split='OOD',
-         train_domains=['<age groups 20-60>'], test_domains=['<age group 80-100>'], paper=0.7636),
+         train_domains=['Age 20-40', 'Age 40-60'], test_domains=['Age 80-100'], paper=0.7636),
 ]
 ```
 
