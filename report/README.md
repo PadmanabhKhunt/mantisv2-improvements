@@ -7,13 +7,15 @@ IEEE double-column conference format, as required by the project specification:
   (surnames, student numbers, each member's final contribution, and an AI-use statement if the module requires one).
 - `main.pdf`: the compiled draft.
 - `figures/`: the two figures, built from the result CSVs by `python report/make_figures.py`.
+- `sessions_table.tex`, `timing_table.tex`: the two timing tables (`\input` by `main.tex`), built by
+  `python kit/make_timing_table.py`.
 
 Every number in the report comes from `results/RESULTS.md` (built by `kit/make_results_tables.py`) or from the
 `time_s` and `layer_weights` columns of the CSVs in `results/`.
 
 ## Build
 
-On Overleaf: upload `main.tex` and the `figures/` folder, and compile with pdfLaTeX (`IEEEtran` is built in).
+On Overleaf: upload `main.tex`, `sessions_table.tex`, `timing_table.tex` and the `figures/` folder, and compile with pdfLaTeX (`IEEEtran` is built in).
 
 Locally (MiKTeX or TeX Live):
 

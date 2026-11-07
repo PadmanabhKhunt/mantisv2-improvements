@@ -117,9 +117,20 @@ All train and test sizes match Tables 5 and 6 of the paper (Table~\ref{tab:repro
 sample on HHAR-ID and PCL-ID, which come from rounding. Ego4D \cite{ego4d} needs a signed licence, so we did not run
 it.
 
-\textbf{Compute.} We ran datasets 7--12 on Colab and then on a Kaggle CPU session. We ran the others on free Kaggle
-T4 GPUs, in five notebook versions run in parallel. The total was about 12 GPU hours. Each run saves its executed
-notebook, an HTML and PDF copy, and a CSV of results in the repository.
+\textbf{Compute.} All runs were Kaggle notebooks (Table~\ref{tab:sessions}). We reproduced datasets 7--12 in a
+CPU-only session (2.0\,h, of which 56\,min was the CAP embedding) and ran everything else on free T4 GPUs. The total
+was 12.2\,h of Kaggle time, 10.2\,h of it on a GPU. Parts 1--4 ran in parallel, so all runs finished within about
+14\,h of calendar time. Each run saves its executed notebook, an HTML and PDF copy, and a CSV of results in the
+repository; \texttt{kit/make\_timing\_table.py} builds the timing tables from these files.
+
+\begin{table}[t]
+\caption{Kaggle notebooks we ran, with wall-clock time (including downloads).}
+\label{tab:sessions}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\input{sessions_table.tex}
+\end{table}
 
 \begin{table}[t]
 \caption{Reproduction of the frozen MantisV2 + RF protocol (accuracy, 3 RF seeds). $C$ = channels; $\Delta$ = ours
@@ -345,27 +356,23 @@ as its starting point, which suggests that a short fine-tune is safer than a dee
 On the smallest EEG sets (FingerMovements, SCP1, 268--316 training samples), logistic regression is best: with so few
 samples, a simple linear model on good frozen features beats every trained head.
 
-\begin{table}[t]
-\caption{Training time for 3 seeds (s; Kaggle T4 GPU, RF on 4 CPU cores; feature extraction excluded) and number of
-trainable parameters.}
+\begin{table*}[t]
+\caption{Time per dataset and step (seconds; 3 seeds for each method, LogReg 1 run). Feat./Tok. = one frozen-encoder
+pass for the 512-d features (RF, LogReg, Head, Mixer) or for all layers and tokens (Pool, Pool+mix); the methods are
+timed with these already computed, except LoRA, which runs the encoder in every epoch. T4 GPU unless marked
+$^\dagger$ (CPU-only reproduction notebook); the RF always runs on the CPU cores. -- = not recorded; CAP-ID and
+CAP-OOD share one feature pass. Trainable parameters: Head/Mixer 51k--67k, Pool+mix 86k--102k, LoRA +36,864 in the
+encoder.}
 \label{tab:cost}
 \centering
 \footnotesize
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{lrrrr}
-\toprule
-Method & MP50 & PCL-OOD & SEDFx-ID & Params \\
-\midrule
-RF (paper) & 37 & 465 & 3753 & 200 trees \\
-LogReg & 4 & 155 & 378 & $\approx$\,$C\!\cdot\!512\,K$ \\
-Mixer v2 (idea 1) & 23 & 92 & 240 & 51k--67k \\
-Idea 2 + mixer & 163 & 727 & 325 & 86k--102k \\
-LoRA + mixer (idea 3) & 1200 & 5075 & 1472 & +36,864 enc. \\
-\bottomrule
-\end{tabular}
-\end{table}
+\input{timing_table.tex}
+\end{table*}
 
-\textbf{Cost.} Table~\ref{tab:cost} compares training times. The mixer head trains in seconds to a few minutes.
+\textbf{Cost.} Table~\ref{tab:cost} gives the time of every step. Summed over the 17 datasets, the paper's RF
+took 3.3\,h, LogReg 19\,min, the head 9\,min, the mixer 14\,min, idea 2 (with the mixer) 47\,min and LoRA 4.3\,h.
+Feature extraction is cheap on a GPU: 138\,s for the 211,856 Sleep-EDFx-ID samples, against 56\,min on the CPU for
+CAP. The mixer head trains in seconds to a few minutes.
 On Sleep-EDFx-ID it is 15$\times$ faster than the RF and 1.5 points more accurate, an improvement in both accuracy and
 computational cost. LoRA is the most expensive because it runs the encoder (cut to 3 layers) in every epoch, so its
 cost grows with channels $\times$ samples. It took 85 minutes for 3 seeds on PCL-OOD, with 48 channels. It is still a

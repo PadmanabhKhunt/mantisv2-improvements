@@ -89,6 +89,7 @@ kit/                           ready-to-use version of everything, for any datas
   make_notebook.py             rebuilds the notebook after changes to mantisv2_kit.py
   run_datasets_1-6_13-18_kaggle.py   the Kaggle runner used for datasets 1-6 and 13-18 (parts 1-5)
   make_results_tables.py       builds results/RESULTS.md from every result CSV
+  make_timing_table.py         builds results/TIMING.md (and the report's timing tables) from the notebooks and CSVs
 reproduction/
   reproduce_mantisv2.py        standalone script: frozen MantisV2 + Random Forest, datasets 7-12
   MantisV2_Reproduction_*.ipynb/.html/.pdf   executed notebook (Kaggle run)
@@ -104,6 +105,7 @@ report/
   main.tex, main.pdf           the report draft (IEEE format); make_figures.py builds figures/
 results/
   RESULTS.md                   final tables for all 18 datasets
+  TIMING.md                    how long every Kaggle run and every step took
   datasets_7_12_kit_results.csv   datasets 7-12 in the kit's format
   datasets_1-18_kit/           kit-format CSVs from the runs above
 ```
@@ -122,6 +124,43 @@ Datasets are downloaded automatically into `data/` (not stored in git). CAP is a
 Improvements: we ran these on Kaggle (free GPU T4). Make a new Kaggle notebook, turn on the GPU, and paste each
 `# %% cell` block from `improvements/code/` into its own cell. Then use "Save & Run All". Run 3 needs about 70
 minutes on a T4.
+
+## How long it took (Kaggle)
+
+All runs were Kaggle notebooks. The full tables are in [results/TIMING.md](results/TIMING.md), built by
+`python kit/make_timing_table.py` from the saved notebooks and the `time_s` columns of the result CSVs.
+
+| # | Kaggle run | What it did | Hardware | Time |
+|---|---|---|---|---|
+| 1 | `reproduction/` | Reproduction of datasets 7–12 (embeddings + Random Forest) | CPU only | 1.99 h |
+| 2 | `improvements/runs/1_ideas_1_2_first_try` | First versions of ideas 1 and 2 (4 datasets) | T4 GPU | 35.5 min |
+| 3 | `improvements/runs/2_mixer_v2` | Idea 1 (mixer v2) + plain head, datasets 7–12 | T4 GPU | 8.9 min |
+| 4 | `improvements/runs/3_idea2_cap_and_lora` | Idea 2 on CAP + idea 3 (LoRA), datasets 7–12 | T4 GPU | 1.17 h |
+| 5 | `.../4_datasets_1-6_13-18/part1` | All 7 methods on SCP1, SCP2, EMOPain, MP8, MP50, HHAR-ID/OOD | T4 GPU | 48.0 min |
+| 6 | `.../part2_failed_out_of_RAM` | PCL-ID/OOD, stopped (out of RAM) | T4 GPU | 24.6 min |
+| 7 | `.../part3_SEDFx-ID` | All 7 methods on SEDFx-ID (211,856 samples) | T4 GPU | 1.99 h |
+| 8 | `.../part4_SEDFx-OOD` | All 7 methods on SEDFx-OOD (186,584 samples) | T4 GPU | 1.82 h |
+| 9 | `.../part5_reruns` | Re-runs after memory fixes (PCL-ID/OOD, LoRA, idea 2 fill-ins) | T4 GPU | 3.30 h |
+|   | **Total** | | | **12.2 h** (10.2 h GPU) |
+
+Parts 1–4 ran in parallel, so everything finished in about 14 hours of calendar time (6 Nov 13:48 → 7 Nov 03:56 UTC).
+
+Time per method, summed over the 17 datasets (3 seeds each, features already extracted):
+
+| Step | Total time | Slowest dataset |
+|---|---|---|
+| Feature extraction (frozen encoder) | 4,242 s (1.2 h) | CAP, 3,386 s on CPU (on the T4 the slowest was PCL-ID, 166 s) |
+| RF (paper) | 11,940 s (3.3 h) | SEDFx-ID, 3,753 s |
+| LogReg | 1,117 s (19 min) | SEDFx-ID, 378 s |
+| Head | 556 s (9 min) | SEDFx-ID, 136 s |
+| Mixer v2 (idea 1) | 864 s (14 min) | SEDFx-ID, 240 s |
+| Pool (idea 2) | 2,408 s (40 min) | PCL-OOD, 599 s |
+| Pool + mixer | 2,813 s (47 min) | PCL-OOD, 727 s |
+| LoRA + mixer (idea 3) | 15,322 s (4.3 h) | PCL-OOD, 5,075 s |
+
+The RF times for datasets 7–12 were measured on the CPU-only reproduction notebook, so they are slower than on the
+GPU sessions (whose 4 CPU cores run the RF). The mixer head is the cheapest of our improvements: on SEDFx-ID it is
+15× faster than the paper's RF and more accurate.
 
 ## Data sources
 
