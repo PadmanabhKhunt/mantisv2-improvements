@@ -17,8 +17,8 @@ Full tables (with std, and the mixer gate for every dataset): **[`results/RESULT
 ## Main results (accuracy, mean of 3 seeds)
 
 **Reproduction.** Frozen MantisV2 + Random Forest matches the paper on 15 of 17 datasets to within 0.01
-(16 within 0.02; mean absolute difference 0.004). The two gaps are CAP-ID (−0.006, unreported split seed) and
-MP50 (−0.025).
+(16 within 0.02; mean absolute difference 0.004). The two larger gaps are MP8 (−0.010) and MP50 (−0.025); CAP-ID is
+−0.006 (the paper does not report the seed of its random split).
 
 | # | Dataset | Paper | Our RF | Mixer v2 (idea 1) | Idea 2 + mixer | LoRA + mixer (idea 3) | Best overall |
 |---|---|---|---|---|---|---|---|
@@ -54,12 +54,15 @@ Key findings for the report:
 
 - **LoRA + mixer is the strongest improvement**: +1.5 points over the paper's protocol on average, training only
   36,864 encoder weights (0.9% of the model).
-- **Large datasets gain the most from the trained heads**: SEDFx-OOD +3.4 points, PCL-OOD +2.7, CAP-ID +2.5,
-  SEDFx-ID +1.6, while the paper's method stays best on HHAR-OOD, CAP-OOD and EMOPain.
-- **The mixer gate shows how much the model uses channel mixing**: about ±0.1–0.3 on multi-channel data, near 0 on
-  the single-channel Epilepsy-EEG and on the noisy small EEG sets (FingerMovements, SelfRegulationSCP2).
-- **Learned layer weights stay close to uniform** (about 0.17 each), so no single layer dominates; this questions the
-  paper's choice of layer 2 for these domains.
+- **Biggest gains over the paper's protocol**: MP50 +5.6 points (LoRA), PCL-ID +4.3 (LoRA), SEDFx-OOD +3.4 (mixer),
+  MP8 +3.5 (mixer), PCL-OOD +2.7 (mixer), CAP-ID +2.5 (idea 2 + mixer). The paper's Random Forest stays best on
+  HHAR-OOD, CAP-OOD and EMOPain: two of these are out-of-domain tests, where the trained heads fit the training
+  domains too closely.
+- **The mixer gate shows how much the model uses channel mixing**: |gate| about 0.05–0.3 on multi-channel data
+  (largest on HHAR, MP8, CAP, SEDFx), and close to 0 on the single-channel Epilepsy-EEG and on the small EEG sets
+  FingerMovements and SelfRegulationSCP1/2.
+- **Learned layer weights stay close to uniform** (0.14–0.22 per layer; a slight preference for the last two layers
+  on EMOPain and MP8), so no single layer dominates; this questions the paper's fixed choice of layer 2.
 - **Small EEG datasets (FingerMovements, SCP1) are best with plain logistic regression**: with a few hundred training
   samples a trained head overfits.
 
