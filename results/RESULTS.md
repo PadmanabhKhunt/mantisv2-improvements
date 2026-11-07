@@ -21,11 +21,11 @@ Accuracy on the test split, mean ± std over 3 seeds (logistic regression is det
 | 13 | PCL-ID | 0.5716 | 0.5769 ± 0.0031 | +0.0053 |
 | 14 | PCL-OOD | 0.5311 | 0.5343 ± 0.0024 | +0.0032 |
 | 15 | SEDFx-ID | 0.8000 | 0.7985 ± 0.0004 | -0.0015 |
-| 16 | SEDFx-OOD | 0.7636 | — | not run |
+| 16 | SEDFx-OOD | 0.7636 | 0.7640 ± 0.0002 | +0.0004 |
 | 17 | SelfRegulationSCP1 | 0.8134 | 0.8134 ± 0.0016 | +0.0000 |
 | 18 | SelfRegulationSCP2 | 0.5167 | 0.5148 ± 0.0228 | -0.0019 |
 
-16 datasets reproduced. Within 0.01 of the paper: 14; within 0.02: 15; mean absolute difference 0.0039.
+17 datasets reproduced. Within 0.01 of the paper: 15; within 0.02: 16; mean absolute difference 0.0037.
 
 ## 2. Improvements (same frozen encoder; best per row in bold)
 
@@ -45,6 +45,7 @@ Accuracy on the test split, mean ± std over 3 seeds (logistic regression is det
 | 13 | PCL-ID | 0.5769 | 0.5874 | 0.5980 | 0.5988 | 0.5947 | 0.5966 | **0.6195** |
 | 14 | PCL-OOD | 0.5343 | 0.5445 | 0.5478 | **0.5615** | 0.5465 | 0.5586 | 0.5583 |
 | 15 | SEDFx-ID | 0.7985 | 0.8136 | 0.8042 | 0.8139 | 0.8081 | **0.8144** | 0.8126 |
+| 16 | SEDFx-OOD | 0.7640 | 0.7840 | 0.7928 | **0.7979** | 0.7909 | 0.7962 | 0.7946 |
 | 17 | SelfRegulationSCP1 | 0.8134 | **0.8669** | 0.8305 | 0.8316 | 0.7998 | 0.7952 | 0.8544 |
 | 18 | SelfRegulationSCP2 | 0.5148 | 0.5111 | 0.5019 | 0.4944 | 0.4963 | **0.5352** | 0.5148 |
 
@@ -52,15 +53,15 @@ Accuracy on the test split, mean ± std over 3 seeds (logistic regression is det
 
 | Method | Datasets run | Mean accuracy (datasets where all of RF, mixer and LoRA ran) | Wins vs RF | Best of all methods |
 |---|---|---|---|---|
-| RF (paper) | 16 | 0.7546 | — | 3 |
-| LogReg | 14 | — | 7 | 2 |
-| Head | 16 | 0.7540 | 10 | 0 |
-| Mixer v2 (idea 1) | 16 | 0.7560 | 11 | 2 |
-| Pooling (idea 2) | 16 | 0.7479 | 8 | 1 |
-| Idea 2 + mixer | 16 | 0.7501 | 8 | 3 |
-| LoRA + mixer (idea 3) | 16 | 0.7690 | 12 | 5 |
+| RF (paper) | 17 | 0.7551 | — | 3 |
+| LogReg | 15 | — | 8 | 2 |
+| Head | 17 | 0.7562 | 11 | 0 |
+| Mixer v2 (idea 1) | 17 | 0.7584 | 12 | 3 |
+| Pooling (idea 2) | 17 | 0.7504 | 9 | 1 |
+| Idea 2 + mixer | 17 | 0.7528 | 9 | 3 |
+| LoRA + mixer (idea 3) | 17 | 0.7705 | 13 | 5 |
 
-Mean accuracy is over the 16 datasets where RF, mixer v2 and LoRA all ran, so the numbers are comparable.
+Mean accuracy is over the 17 datasets where RF, mixer v2 and LoRA all ran, so the numbers are comparable.
 
 ## 4. Mixer gate (how much cross-channel mixing the model chose; 0 = none)
 
@@ -80,6 +81,7 @@ Mean accuracy is over the 16 datasets where RF, mixer v2 and LoRA all ran, so th
 | PCL-ID | 48 | [-0.067, -0.062, -0.058] | [-0.1, -0.122, -0.001] |
 | PCL-OOD | 48 | [0.104, 0.081, -0.094] | [0.218, -0.215, -0.246] |
 | SEDFx-ID | 4 | [-0.155, -0.157, -0.153] | [-0.279, 0.286, 0.279] |
+| SEDFx-OOD | 4 | [-0.155, -0.16, -0.147] | [-0.245, 0.282, 0.282] |
 | SelfRegulationSCP1 | 6 | [0.036, -0.027, -0.051] | [0.052, -0.016, -0.054] |
 | SelfRegulationSCP2 | 7 | [0.02, 0.001, 0.006] | [0.0, 0.004, 0.006] |
 

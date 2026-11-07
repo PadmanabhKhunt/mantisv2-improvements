@@ -10,38 +10,68 @@ model with three changes on top of the pretrained encoder:
    and attention pooling over the tokens.
 3. **LoRA fine-tuning.** Low-rank adapters (rank 8) on the attention weights. This trains 36,864 encoder weights (0.9% of 4.2M).
 
-Status: datasets 7–12 (UCI-HAR, Blink, CAP-ID, CAP-OOD, Epilepsy-EEG, FingerMovements) are done. Datasets 1–6 are
-still to run.
+**Status (7 Nov 2026): all experiments are done.** 17 of the 18 datasets in Tables 2 and 3 of the paper are run with
+every method; Ego4D is not run because it needs a signed licence agreement. Only the report remains.
+Full tables (with std, and the mixer gate for every dataset): **[`results/RESULTS.md`](results/RESULTS.md)**.
 
-## Run it on your datasets (group members start here)
+## Main results (accuracy, mean of 3 seeds)
 
-Split of the 18 paper datasets (Tables 2 and 3, in order): **Aadil 1–6**, **Padmanabh 7–12 (done)**, **Praneet 13–18**.
-Which source to use for each dataset, with ready-to-paste notebook lines: **[`kit/DATASETS_1-18.md`](kit/DATASETS_1-18.md)**.
+**Reproduction.** Frozen MantisV2 + Random Forest matches the paper on 15 of 17 datasets to within 0.01
+(16 within 0.02; mean absolute difference 0.004). The two gaps are CAP-ID (−0.006, unreported split seed) and
+MP50 (−0.025).
 
-Everything is in **[`kit/`](kit/)**, and the step-by-step guide is **[`kit/HOW_TO_RUN.md`](kit/HOW_TO_RUN.md)**. In short:
+| # | Dataset | Paper | Our RF | Mixer v2 (idea 1) | Idea 2 + mixer | LoRA + mixer (idea 3) | Best overall |
+|---|---|---|---|---|---|---|---|
+| 1 | Ego4D | 0.526 | not run (licence) | | | | |
+| 2 | EMOPain | 0.880 | 0.883 | 0.854 | 0.839 | 0.864 | RF 0.883 |
+| 3 | HHAR-ID | 0.985 | 0.983 | 0.989 | 0.989 | **0.990** | LoRA |
+| 4 | HHAR-OOD | 0.582 | 0.587 | 0.520 | 0.540 | 0.570 | RF 0.587 |
+| 5 | MP8 | 0.686 | 0.676 | **0.711** | 0.629 | 0.695 | mixer |
+| 6 | MP50 | 0.735 | 0.709 | 0.713 | 0.693 | **0.765** | LoRA |
+| 7 | UCI-HAR | 0.901 | 0.901 | 0.918 | 0.913 | **0.925** | LoRA |
+| 8 | Blink | 0.996 | 0.996 | 0.998 | 0.992 | **1.000** | LoRA |
+| 9 | CAP-ID | 0.815 | 0.809 | 0.826 | **0.834** | 0.819 | idea 2 + mixer |
+| 10 | CAP-OOD | 0.786 | 0.786 | 0.768 | 0.765 | 0.761 | RF 0.786 |
+| 11 | Epilepsy-EEG | 0.956 | 0.956 | 0.958 | 0.958 | 0.958 | idea 2 pooling 0.959 |
+| 12 | FingerMovements | 0.550 | 0.550 | 0.543 | 0.550 | 0.597 | LogReg 0.640 |
+| 13 | PCL-ID | 0.572 | 0.577 | 0.599 | 0.597 | **0.620** | LoRA |
+| 14 | PCL-OOD | 0.531 | 0.534 | **0.562** | 0.559 | 0.558 | mixer |
+| 15 | SEDFx-ID | 0.800 | 0.799 | 0.814 | **0.814** | 0.813 | idea 2 + mixer |
+| 16 | SEDFx-OOD | 0.764 | 0.764 | **0.798** | 0.796 | 0.795 | mixer |
+| 17 | SelfRegulationSCP1 | 0.813 | 0.813 | 0.832 | 0.795 | 0.854 | LogReg 0.867 |
+| 18 | SelfRegulationSCP2 | 0.517 | 0.515 | 0.494 | **0.535** | 0.515 | idea 2 + mixer |
 
-1. Download `kit/MantisV2_Kit_Kaggle.ipynb`, import it into Kaggle, and turn on GPU and Internet.
-2. Put your dataset names in the "YOUR DATASETS" cell, then **Save & Run All**.
-3. Upload the result CSVs to `results/members/<your name>/`. Then `python kit/combine_results.py` builds the 12-dataset table.
+**Over the 17 datasets:**
 
-The kit runs the paper baseline (`rf`) and all improvements with the same settings as our runs. It accepts UEA/UCR
-datasets by name, the TF-C datasets, WOODS `.h5` files (with the paper's ID and OOD splits), `.ts`/`.pt` files, or your
-own numpy arrays.
+| Method | Mean accuracy | Beats RF on | Best method on |
+|---|---|---|---|
+| RF (paper protocol) | 0.755 | — | 3 datasets |
+| Mixer v2 (idea 1) | 0.758 | 12 of 17 | 3 |
+| Idea 2 + mixer | 0.753 | 9 of 17 | 3 |
+| LoRA + mixer (idea 3) | **0.771** | **13 of 17** | **5** |
 
-## Results so far (datasets 7–12, accuracy, mean of 3 seeds)
+Key findings for the report:
 
-| Dataset | Paper (MantisV2 + RF) | Our reproduction | Mixer v2 (idea 1) | Learned pooling (idea 2) | Idea 2 + mixer | LoRA + mixer (idea 3) |
-|---|---|---|---|---|---|---|
-| FingerMovements | 0.550 | 0.550 | 0.543 | 0.533 | — | **0.597** |
-| Blink | 0.996 | 0.996 | 0.998 | 0.957 | — | **1.000** |
-| UCI-HAR | 0.901 | 0.901 | 0.918 | 0.924 | — | **0.925** |
-| Epilepsy-EEG | 0.956 | 0.956 | **0.958** | 0.957 | — | **0.958** |
-| CAP-ID | 0.815 | 0.809 | 0.826 | 0.826 | **0.834** | 0.819 |
-| CAP-OOD | 0.786 | **0.786** | 0.768 | 0.765 | 0.765 | 0.761 |
+- **LoRA + mixer is the strongest improvement**: +1.5 points over the paper's protocol on average, training only
+  36,864 encoder weights (0.9% of the model).
+- **Large datasets gain the most from the trained heads**: SEDFx-OOD +3.4 points, PCL-OOD +2.7, CAP-ID +2.5,
+  SEDFx-ID +1.6, while the paper's method stays best on HHAR-OOD, CAP-OOD and EMOPain.
+- **The mixer gate shows how much the model uses channel mixing**: about ±0.1–0.3 on multi-channel data, near 0 on
+  the single-channel Epilepsy-EEG and on the noisy small EEG sets (FingerMovements, SelfRegulationSCP2).
+- **Learned layer weights stay close to uniform** (about 0.17 each), so no single layer dominates; this questions the
+  paper's choice of layer 2 for these domains.
+- **Small EEG datasets (FingerMovements, SCP1) are best with plain logistic regression**: with a few hundred training
+  samples a trained head overfits.
 
-"—" means not run. On the four small datasets, idea 2 comes from the first test run (`runs/1_ideas_1_2_first_try`).
-LoRA on CAP ran only 4 epochs to fit the free GPU. Full numbers, standard deviations and per-seed values are in
-`results/`.
+Notes: LoRA on large datasets (more than 10,000 training samples) uses 4 epochs to fit the free GPU. For datasets with
+more than about 40 channels, the LoRA batch is reduced to fit GPU memory (see `kit/mantisv2_kit.py`, `fit`).
+
+## Run it on other datasets
+
+Everything is in **[`kit/`](kit/)**; the guide is **[`kit/HOW_TO_RUN.md`](kit/HOW_TO_RUN.md)**, the per-dataset sources
+are in **[`kit/DATASETS_1-18.md`](kit/DATASETS_1-18.md)**, and `kit/run_datasets_1-6_13-18_kaggle.py` is the exact
+Kaggle runner used for datasets 1–6 and 13–18. `python kit/make_results_tables.py` rebuilds `results/RESULTS.md` from
+all result CSVs.
 
 ## Repository layout
 
@@ -53,6 +83,8 @@ kit/                           ready-to-use version of everything, for any datas
   DATASETS_1-18.md             the 18 datasets, who runs which, how to load each
   combine_results.py           merges everyone's CSVs into one table
   make_notebook.py             rebuilds the notebook after changes to mantisv2_kit.py
+  run_datasets_1-6_13-18_kaggle.py   the Kaggle runner used for datasets 1-6 and 13-18 (parts 1-5)
+  make_results_tables.py       builds results/RESULTS.md from every result CSV
 reproduction/
   reproduce_mantisv2.py        standalone script: frozen MantisV2 + Random Forest, datasets 7-12
   MantisV2_Reproduction_*.ipynb/.html/.pdf   executed notebook (Kaggle run)
@@ -63,9 +95,11 @@ improvements/
     2_mixer_v2.py              fixed mixer: small, gated, channel dropout
     3_idea2_cap_and_lora.py    learned pooling on CAP + LoRA on all six datasets
   runs/                        executed notebooks (.ipynb/.html/.pdf) and CSV for each run
-results/                       all result CSVs in one place
-  datasets_7_12_kit_results.csv   our datasets 7-12 in the kit's format
-  members/                     each member's CSVs go here
+    4_datasets_1-6_13-18/      Kaggle runs for datasets 1-6 and 13-18 (part 2 ran out of RAM; re-run in part 5)
+results/
+  RESULTS.md                   final tables for all 18 datasets
+  datasets_7_12_kit_results.csv   datasets 7-12 in the kit's format
+  datasets_1-18_kit/           kit-format CSVs from the runs above
 ```
 
 ## How to run
@@ -87,6 +121,9 @@ minutes on a T4.
 
 - Blink, FingerMovements: timeseriesclassification.com
 - UCI-HAR, Epilepsy-EEG: TF-C preprocessed files on figshare (articles 19930244, 19930199), fetched with the figshare API
-- CAP: WOODS preprocessed `CAP.h5`
+- CAP, HHAR, PCL, SEDFx: WOODS preprocessed `.h5` files (Google Drive ids in `kit/DATASETS_1-18.md`)
+- EMOPain, SelfRegulationSCP1/2: timeseriesclassification.com
+- MP8, MP50: Sungu Isiacik et al. (2025), github.com/mlgig/FM4MTSC (public Google Drive folder)
+- Ego4D: not used (licence agreement required)
 
 Pretrained model: `paris-noah/MantisV2` from the `mantis-tsfm` package (github.com/vfeofanov/mantis).
