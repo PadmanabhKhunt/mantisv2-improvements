@@ -20,12 +20,12 @@ Accuracy on the test split, mean ± std over 3 seeds (logistic regression is det
 | 12 | FingerMovements | 0.5500 | 0.5500 ± 0.0082 | +0.0000 |
 | 13 | PCL-ID | 0.5716 | 0.5769 ± 0.0031 | +0.0053 |
 | 14 | PCL-OOD | 0.5311 | — | not run |
-| 15 | SEDFx-ID | 0.8000 | — | not run |
+| 15 | SEDFx-ID | 0.8000 | 0.7985 ± 0.0004 | -0.0015 |
 | 16 | SEDFx-OOD | 0.7636 | — | not run |
 | 17 | SelfRegulationSCP1 | 0.8134 | 0.8134 ± 0.0016 | +0.0000 |
 | 18 | SelfRegulationSCP2 | 0.5167 | 0.5148 ± 0.0228 | -0.0019 |
 
-14 datasets reproduced. Within 0.01 of the paper: 12; within 0.02: 13; mean absolute difference 0.0041.
+15 datasets reproduced. Within 0.01 of the paper: 13; within 0.02: 14; mean absolute difference 0.0039.
 
 ## 2. Improvements (same frozen encoder; best per row in bold)
 
@@ -43,6 +43,7 @@ Accuracy on the test split, mean ± std over 3 seeds (logistic regression is det
 | 11 | Epilepsy-EEG | 0.9558 | 0.9311 | 0.9566 | 0.9576 | **0.9588** | 0.9580 | 0.9575 |
 | 12 | FingerMovements | 0.5500 | **0.6400** | 0.5667 | 0.5433 | 0.5333 | — | 0.5967 |
 | 13 | PCL-ID | 0.5769 | 0.5874 | 0.5980 | **0.5988** | — | — | — |
+| 15 | SEDFx-ID | 0.7985 | 0.8136 | 0.8042 | 0.8139 | 0.8081 | **0.8144** | 0.8126 |
 | 17 | SelfRegulationSCP1 | 0.8134 | **0.8669** | 0.8305 | 0.8316 | 0.7998 | 0.7952 | 0.8544 |
 | 18 | SelfRegulationSCP2 | 0.5148 | 0.5111 | 0.5019 | 0.4944 | 0.4963 | **0.5352** | 0.5148 |
 
@@ -50,15 +51,15 @@ Accuracy on the test split, mean ± std over 3 seeds (logistic regression is det
 
 | Method | Datasets run | Mean accuracy (datasets where all of RF, mixer and LoRA ran) | Wins vs RF | Best of all methods |
 |---|---|---|---|---|
-| RF (paper) | 14 | 0.7792 | — | 3 |
-| LogReg | 12 | — | 5 | 2 |
-| Head | 14 | 0.7787 | 8 | 0 |
-| Mixer v2 (idea 1) | 14 | 0.7778 | 9 | 3 |
-| Pooling (idea 2) | 13 | 0.7648 | 4 | 1 |
-| Idea 2 + mixer | 11 | — | 5 | 2 |
-| LoRA + mixer (idea 3) | 11 | 0.7894 | 8 | 3 |
+| RF (paper) | 15 | 0.7808 | — | 3 |
+| LogReg | 13 | — | 6 | 2 |
+| Head | 15 | 0.7808 | 9 | 0 |
+| Mixer v2 (idea 1) | 15 | 0.7808 | 10 | 3 |
+| Pooling (idea 2) | 14 | 0.7684 | 5 | 1 |
+| Idea 2 + mixer | 12 | — | 6 | 3 |
+| LoRA + mixer (idea 3) | 12 | 0.7914 | 9 | 3 |
 
-Mean accuracy is over the 11 datasets where RF, mixer v2 and LoRA all ran, so the numbers are comparable.
+Mean accuracy is over the 12 datasets where RF, mixer v2 and LoRA all ran, so the numbers are comparable.
 
 ## 4. Mixer gate (how much cross-channel mixing the model chose; 0 = none)
 
@@ -76,6 +77,7 @@ Mean accuracy is over the 11 datasets where RF, mixer v2 and LoRA all ran, so th
 | Epilepsy-EEG | 1 | nan | [0.011, 0.002, -0.007] |
 | FingerMovements |  | nan | — |
 | PCL-ID | 48 | [-0.067, -0.062, -0.058] | — |
+| SEDFx-ID | 4 | [-0.155, -0.157, -0.153] | [-0.279, 0.286, 0.279] |
 | SelfRegulationSCP1 | 6 | [0.036, -0.027, -0.051] | [0.052, -0.016, -0.054] |
 | SelfRegulationSCP2 | 7 | [0.02, 0.001, 0.006] | [0.0, 0.004, 0.006] |
 
