@@ -95,7 +95,10 @@ if 'gate' in df.columns:
         gm = g[g.method == 'mixer'].gate.tolist()
         gp = g[g.method == 'pool_mixer'].gate.tolist()
         ch = g.channels.dropna().iloc[0] if 'channels' in g and g.channels.notna().any() else ''
-        out.append(f'| {name} | {"" if ch == "" else int(ch)} | {gm[0] if gm else "—"} | {gp[0] if gp else "—"} |')
+        gm = [x for x in gm if isinstance(x, str)][-1:]
+        gp = [x for x in gp if isinstance(x, str)][-1:]
+        fmt = lambda g: g[0] if g and isinstance(g[0], str) else '—'
+        out.append(f'| {name} | {"" if ch == "" else int(ch)} | {fmt(gm)} | {fmt(gp)} |')
     out.append('')
 
 (RES / 'RESULTS.md').write_text('\n'.join(out) + '\n', encoding='utf-8')

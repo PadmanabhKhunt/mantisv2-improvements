@@ -19,30 +19,31 @@ Accuracy on the test split, mean ± std over 3 seeds (logistic regression is det
 | 11 | Epilepsy-EEG | 0.9558 | 0.9558 ± 0.0012 | -0.0000 |
 | 12 | FingerMovements | 0.5500 | 0.5500 ± 0.0082 | +0.0000 |
 | 13 | PCL-ID | 0.5716 | 0.5769 ± 0.0031 | +0.0053 |
-| 14 | PCL-OOD | 0.5311 | — | not run |
+| 14 | PCL-OOD | 0.5311 | 0.5343 ± 0.0024 | +0.0032 |
 | 15 | SEDFx-ID | 0.8000 | 0.7985 ± 0.0004 | -0.0015 |
 | 16 | SEDFx-OOD | 0.7636 | — | not run |
 | 17 | SelfRegulationSCP1 | 0.8134 | 0.8134 ± 0.0016 | +0.0000 |
 | 18 | SelfRegulationSCP2 | 0.5167 | 0.5148 ± 0.0228 | -0.0019 |
 
-15 datasets reproduced. Within 0.01 of the paper: 13; within 0.02: 14; mean absolute difference 0.0039.
+16 datasets reproduced. Within 0.01 of the paper: 14; within 0.02: 15; mean absolute difference 0.0039.
 
 ## 2. Improvements (same frozen encoder; best per row in bold)
 
 | # | Dataset | RF (paper) | LogReg | Head | Mixer v2 (idea 1) | Pooling (idea 2) | Idea 2 + mixer | LoRA + mixer (idea 3) |
 |---|---|---|---|---|---|---|---|---|
-| 2 | EMOPain | **0.8826** | 0.8310 | 0.8469 | 0.8535 | 0.8423 | 0.8394 | — |
+| 2 | EMOPain | **0.8826** | 0.8310 | 0.8469 | 0.8535 | 0.8423 | 0.8394 | 0.8638 |
 | 3 | HHAR-ID | 0.9834 | 0.9854 | 0.9859 | 0.9886 | 0.9871 | 0.9885 | **0.9902** |
 | 4 | HHAR-OOD | **0.5868** | 0.5604 | 0.5789 | 0.5195 | 0.5319 | 0.5402 | 0.5704 |
 | 5 | MP8 | 0.6756 | 0.6521 | 0.6852 | **0.7109** | 0.6359 | 0.6291 | 0.6947 |
-| 6 | MP50 | 0.7092 | 0.6689 | 0.7008 | **0.7126** | 0.7048 | 0.6930 | — |
+| 6 | MP50 | 0.7092 | 0.6689 | 0.7008 | 0.7126 | 0.7048 | 0.6930 | **0.7653** |
 | 7 | UCI-HAR | 0.9013 | 0.9145 | 0.9102 | 0.9178 | 0.9215 | 0.9125 | **0.9246** |
-| 8 | Blink | 0.9956 | 0.9733 | 0.9844 | 0.9978 | 0.9570 | — | **1.0000** |
+| 8 | Blink | 0.9956 | 0.9733 | 0.9844 | 0.9978 | 0.9941 | 0.9919 | **1.0000** |
 | 9 | CAP-ID | 0.8091 | — | 0.8166 | 0.8258 | 0.8261 | **0.8336** | 0.8194 |
 | 10 | CAP-OOD | **0.7858** | — | 0.7488 | 0.7679 | 0.7651 | 0.7653 | 0.7612 |
 | 11 | Epilepsy-EEG | 0.9558 | 0.9311 | 0.9566 | 0.9576 | **0.9588** | 0.9580 | 0.9575 |
-| 12 | FingerMovements | 0.5500 | **0.6400** | 0.5667 | 0.5433 | 0.5333 | — | 0.5967 |
-| 13 | PCL-ID | 0.5769 | 0.5874 | 0.5980 | **0.5988** | — | — | — |
+| 12 | FingerMovements | 0.5500 | **0.6400** | 0.5667 | 0.5433 | 0.5533 | 0.5500 | 0.5967 |
+| 13 | PCL-ID | 0.5769 | 0.5874 | 0.5980 | 0.5988 | 0.5947 | 0.5966 | **0.6195** |
+| 14 | PCL-OOD | 0.5343 | 0.5445 | 0.5478 | **0.5615** | 0.5465 | 0.5586 | 0.5583 |
 | 15 | SEDFx-ID | 0.7985 | 0.8136 | 0.8042 | 0.8139 | 0.8081 | **0.8144** | 0.8126 |
 | 17 | SelfRegulationSCP1 | 0.8134 | **0.8669** | 0.8305 | 0.8316 | 0.7998 | 0.7952 | 0.8544 |
 | 18 | SelfRegulationSCP2 | 0.5148 | 0.5111 | 0.5019 | 0.4944 | 0.4963 | **0.5352** | 0.5148 |
@@ -51,15 +52,15 @@ Accuracy on the test split, mean ± std over 3 seeds (logistic regression is det
 
 | Method | Datasets run | Mean accuracy (datasets where all of RF, mixer and LoRA ran) | Wins vs RF | Best of all methods |
 |---|---|---|---|---|
-| RF (paper) | 15 | 0.7808 | — | 3 |
-| LogReg | 13 | — | 6 | 2 |
-| Head | 15 | 0.7808 | 9 | 0 |
-| Mixer v2 (idea 1) | 15 | 0.7808 | 10 | 3 |
-| Pooling (idea 2) | 14 | 0.7684 | 5 | 1 |
-| Idea 2 + mixer | 12 | — | 6 | 3 |
-| LoRA + mixer (idea 3) | 12 | 0.7914 | 9 | 3 |
+| RF (paper) | 16 | 0.7546 | — | 3 |
+| LogReg | 14 | — | 7 | 2 |
+| Head | 16 | 0.7540 | 10 | 0 |
+| Mixer v2 (idea 1) | 16 | 0.7560 | 11 | 2 |
+| Pooling (idea 2) | 16 | 0.7479 | 8 | 1 |
+| Idea 2 + mixer | 16 | 0.7501 | 8 | 3 |
+| LoRA + mixer (idea 3) | 16 | 0.7690 | 12 | 5 |
 
-Mean accuracy is over the 12 datasets where RF, mixer v2 and LoRA all ran, so the numbers are comparable.
+Mean accuracy is over the 16 datasets where RF, mixer v2 and LoRA all ran, so the numbers are comparable.
 
 ## 4. Mixer gate (how much cross-channel mixing the model chose; 0 = none)
 
@@ -70,13 +71,14 @@ Mean accuracy is over the 12 datasets where RF, mixer v2 and LoRA all ran, so th
 | HHAR-OOD | 6 | [0.145, 0.149, 0.12] | [0.158, 0.152, 0.153] |
 | MP8 | 8 | [-0.125, -0.14, -0.128] | [0.201, -0.195, 0.215] |
 | MP50 | 50 | [-0.067, 0.116, -0.1] | [0.173, 0.166, 0.14] |
-| UCI-HAR | 3 | nan | [-0.241, 0.246, 0.274] |
-| Blink |  | nan | — |
-| CAP-ID |  | nan | nan |
-| CAP-OOD |  | nan | nan |
-| Epilepsy-EEG | 1 | nan | [0.011, 0.002, -0.007] |
-| FingerMovements |  | nan | — |
-| PCL-ID | 48 | [-0.067, -0.062, -0.058] | — |
+| UCI-HAR | 3 | [0.14, 0.137, 0.141] | [-0.241, 0.246, 0.274] |
+| Blink | 4 | [0.051, -0.057, -0.057] | [-0.068, -0.089, -0.073] |
+| CAP-ID | 19 | [0.135, 0.144, -0.108] | [0.183, 0.158, -0.185] |
+| CAP-OOD | 19 | [0.141, 0.146, -0.109] | [0.165, 0.205, -0.181] |
+| Epilepsy-EEG | 1 | [-0.038, 0.038, -0.034] | [0.011, 0.002, -0.007] |
+| FingerMovements | 28 | [0.001, 0.002, -0.059] | [0.006, -0.003, 0.013] |
+| PCL-ID | 48 | [-0.067, -0.062, -0.058] | [-0.1, -0.122, -0.001] |
+| PCL-OOD | 48 | [0.104, 0.081, -0.094] | [0.218, -0.215, -0.246] |
 | SEDFx-ID | 4 | [-0.155, -0.157, -0.153] | [-0.279, 0.286, 0.279] |
 | SelfRegulationSCP1 | 6 | [0.036, -0.027, -0.051] | [0.052, -0.016, -0.054] |
 | SelfRegulationSCP2 | 7 | [0.02, 0.001, 0.006] | [0.0, 0.004, 0.006] |

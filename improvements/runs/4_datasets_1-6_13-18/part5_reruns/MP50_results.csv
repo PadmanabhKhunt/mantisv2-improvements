@@ -1,0 +1,2 @@
+dataset,method,mean,std,per_seed,paper,n_train,n_test,channels,classes,time_s,epochs,gate
+MP50,lora,0.765266106442577,0.0020961666032347434,"[0.763, 0.7647, 0.7681]",0.7345,1426,595,50,4,1200,"[29, 30, 30]","[-0.038, 0.067, 0.061]"
