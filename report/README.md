@@ -6,12 +6,12 @@ IEEE double-column conference format, as required by the project specification:
 - `main.tex`: the report source. Lines marked `TODO (group)` must be filled in before submission
   (surnames, student numbers, each member's final contribution, and an AI-use statement if the module requires one).
 - `main.pdf`: the compiled draft.
-- `figures/`: the two figures, built from the result CSVs by `python report/make_figures.py`.
+- `figures/`: the two figures, built from `results/all_results.csv` by `python src/tables/make_figures.py`.
 - `sessions_table.tex`, `timing_table.tex`: the two timing tables (`\input` by `main.tex`), built by
-  `python kit/make_timing_table.py`.
+  `python src/tables/make_timing_table.py`.
 
-Every number in the report comes from `results/RESULTS.md` (built by `kit/make_results_tables.py`) or from the
-`time_s` and `layer_weights` columns of the CSVs in `results/`.
+Every number in the report comes from `results/all_results.csv` (built from the runs in `kaggle_runs/` by
+`src/tables/build_all_results.py`), through `results/RESULTS.md` and `results/TIMING.md`.
 
 ## Build
 

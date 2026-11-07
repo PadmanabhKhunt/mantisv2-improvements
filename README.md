@@ -11,9 +11,19 @@ model with three changes on top of the pretrained encoder:
 3. **LoRA fine-tuning.** Low-rank adapters (rank 8) on the attention weights. This trains 36,864 encoder weights (0.9% of 4.2M).
 
 **Status (7 Nov 2026): all experiments are done.** 17 of the 18 datasets in Tables 2 and 3 of the paper are run with
-every method; Ego4D is not run because it needs a signed licence agreement. Only the report remains.
-Full tables (with std, and the mixer gate for every dataset): **[`results/RESULTS.md`](results/RESULTS.md)**.
-Report draft (IEEE format): **[`report/main.pdf`](report/main.pdf)**, source in [`report/`](report/).
+every method; Ego4D is not run because it needs a signed licence agreement.
+
+**Where to look first**
+
+| You want | Open |
+|---|---|
+| The report (IEEE format) | [`report/main.pdf`](report/main.pdf) |
+| All final numbers, one row per dataset × method | [`results/all_results.csv`](results/all_results.csv) (or one file per dataset in [`results/by_dataset/`](results/by_dataset/)) |
+| The same numbers as readable tables (with std and mixer gates) | [`results/RESULTS.md`](results/RESULTS.md) |
+| How long every run and every step took | [`results/TIMING.md`](results/TIMING.md) |
+| The executed Kaggle notebook behind every number | [`kaggle_runs/`](kaggle_runs/) (numbered 01–10, with a table of what each did) |
+| The code | [`src/`](src/) |
+| How to run it, the 18 datasets, reproduction notes | [`docs/`](docs/) |
 
 ## Main results (accuracy, mean of 3 seeds)
 
@@ -68,79 +78,100 @@ Key findings for the report:
   samples a trained head overfits.
 
 Notes: LoRA on large datasets (more than 10,000 training samples) uses 4 epochs to fit the free GPU. For datasets with
-more than about 40 channels, the LoRA batch is reduced to fit GPU memory (see `kit/mantisv2_kit.py`, `fit`).
-
-## Run it on other datasets
-
-Everything is in **[`kit/`](kit/)**; the guide is **[`kit/HOW_TO_RUN.md`](kit/HOW_TO_RUN.md)**, the per-dataset sources
-are in **[`kit/DATASETS_1-18.md`](kit/DATASETS_1-18.md)**, and `kit/run_datasets_1-6_13-18_kaggle.py` is the exact
-Kaggle runner used for datasets 1–6 and 13–18. `python kit/make_results_tables.py` rebuilds `results/RESULTS.md` from
-all result CSVs.
+more than about 40 channels, the LoRA batch is reduced to fit GPU memory (see `src/mantisv2_kit.py`, `fit`).
 
 ## Repository layout
 
 ```
-kit/                           ready-to-use version of everything, for any dataset
-  mantisv2_kit.py              all methods + data loaders + training (also a command-line tool)
-  MantisV2_Kit_Kaggle.ipynb    upload to Kaggle/Colab, edit one cell, run
-  HOW_TO_RUN.md                step-by-step guide
-  DATASETS_1-18.md             the 18 datasets, who runs which, how to load each
-  combine_results.py           merges everyone's CSVs into one table
+README.md                      this file: overview, main results, how to run
+requirements.txt
+src/                           all code
+  mantisv2_kit.py              the kit: data loaders + all 7 methods (RF, LogReg, head, mixer, pool, pool+mixer, LoRA)
+                               for any dataset; also a command-line tool
+  MantisV2_Kit_Kaggle.ipynb    the kit as a ready-to-run Kaggle/Colab notebook (built by make_notebook.py)
   make_notebook.py             rebuilds the notebook after changes to mantisv2_kit.py
-  run_datasets_1-6_13-18_kaggle.py   the Kaggle runner used for datasets 1-6 and 13-18 (parts 1-5)
-  make_results_tables.py       builds results/RESULTS.md from every result CSV
-  make_timing_table.py         builds results/TIMING.md (and the report's timing tables) from the notebooks and CSVs
-reproduction/
-  reproduce_mantisv2.py        standalone script: frozen MantisV2 + Random Forest, datasets 7-12
-  MantisV2_Reproduction_*.ipynb/.html/.pdf   executed notebook (Kaggle run)
-  REPRODUCTION_NOTES.md        protocol, data sources and problems we hit
-improvements/
-  code/                        notebook cells for each run, one "# %% cell" block per notebook cell
-    1_ideas_1_2_first_try.py   first version of the mixer + learned pooling (overfit; kept for the report)
-    2_mixer_v2.py              fixed mixer: small, gated, channel dropout
-    3_idea2_cap_and_lora.py    learned pooling on CAP + LoRA on all six datasets
-  runs/                        executed notebooks (.ipynb/.html/.pdf) and CSV for each run
-    4_datasets_1-6_13-18/      Kaggle runs for datasets 1-6 and 13-18 (part 2 ran out of RAM; re-run in part 5)
-report/
-  main.tex, main.pdf           the report draft (IEEE format); make_figures.py builds figures/
+  reproduce_mantisv2.py        standalone reproduction of the paper protocol (frozen MantisV2 + Random Forest)
+  run_kaggle_parts.py          the Kaggle runner used for runs 05-09 (PART = 1..5)
+  development/                 the scripts of runs 02-04, written while developing the three ideas
+    1_ideas_1_2_first_try.py   first mixer + learned pooling (they overfit; kept for the report)
+    2_mixer_v2.py              the fixed mixer: small, gated, channel dropout
+    3_idea2_cap_and_lora.py    learned pooling on CAP + LoRA
+  tables/                      turn the raw run outputs into the final tables and figures
+    build_all_results.py       kaggle_runs/*  ->  results/all_results.csv, results/by_dataset/
+    make_results_tables.py     -> results/RESULTS.md
+    make_timing_table.py       -> results/TIMING.md and the report's timing tables
+    make_figures.py            -> report/figures/
+    combine_results.py         quick dataset x method table from any folder of kit CSVs
+    common.py                  dataset list, paper numbers, method names
+kaggle_runs/                   the 10 executed Kaggle notebooks (.ipynb/.html/.pdf) and their raw CSVs, in run order;
+                               README.md says what each run did and which of its numbers are final
 results/
-  RESULTS.md                   final tables for all 18 datasets
-  TIMING.md                    how long every Kaggle run and every step took
-  datasets_7_12_kit_results.csv   datasets 7-12 in the kit's format
-  datasets_1-18_kit/           kit-format CSVs from the runs above
+  all_results.csv              final numbers for all 17 datasets (source_run column = which run produced each)
+  by_dataset/                  the same rows, one CSV per dataset (02_EMOPain.csv ... 18_SelfRegulationSCP2.csv)
+  RESULTS.md                   readable tables: reproduction, improvements, summary, mixer gates
+  TIMING.md                    time of every Kaggle run and every step
+docs/
+  HOW_TO_RUN.md                run the kit on any dataset (Kaggle, Colab or locally)
+  DATASETS.md                  the 18 datasets: sources, shapes, splits, ready-to-paste notebook lines
+  REPRODUCTION_NOTES.md        reproduction protocol, data sources and the problems we hit
+report/
+  main.tex, main.pdf           the report (IEEE format), figures/ and the generated timing tables
+```
+
+All tables and figures are generated from the raw run outputs, so they can be rebuilt in a few seconds without
+re-running any model:
+
+```bash
+python src/tables/build_all_results.py
+python src/tables/make_results_tables.py
+python src/tables/make_timing_table.py
+python src/tables/make_figures.py
 ```
 
 ## How to run
 
-Reproduction (CPU is enough except for CAP, which is slow):
-
 ```bash
 pip install -r requirements.txt
-python reproduction/reproduce_mantisv2.py --datasets Blink FingerMovements
 ```
 
-Datasets are downloaded automatically into `data/` (not stored in git). CAP is an 8.7 GB download.
+**Reproduction (paper protocol).** CPU is enough, except for CAP (an 8.7 GB download and about an hour of CPU):
 
-Improvements: we ran these on Kaggle (free GPU T4). Make a new Kaggle notebook, turn on the GPU, and paste each
-`# %% cell` block from `improvements/code/` into its own cell. Then use "Save & Run All". Run 3 needs about 70
-minutes on a T4.
+```bash
+python src/reproduce_mantisv2.py --datasets Blink FingerMovements
+```
+
+Datasets are downloaded automatically into `data/` (not stored in git).
+
+**Our improvements, on any dataset.** Easiest on Kaggle with the free T4 GPU: upload
+[`src/MantisV2_Kit_Kaggle.ipynb`](src/MantisV2_Kit_Kaggle.ipynb), turn on the GPU, edit the "YOUR DATASETS" cell and
+run all. Step-by-step guide: [`docs/HOW_TO_RUN.md`](docs/HOW_TO_RUN.md); the source and notebook lines for each of the
+18 paper datasets: [`docs/DATASETS.md`](docs/DATASETS.md). Locally:
+
+```bash
+python src/mantisv2_kit.py --dataset Blink --source uea                  # all 7 methods
+python src/mantisv2_kit.py --dataset Blink --source uea --quick          # 1-3 epochs, to check the setup
+```
+
+**The exact runs behind our results.** `src/run_kaggle_parts.py` with `PART = 1 ... 5` is the notebook of runs 05–09;
+the scripts in `src/development/` are runs 02–04 (paste each `# %% cell` block into its own Kaggle cell). Each run's
+executed notebook is in [`kaggle_runs/`](kaggle_runs/).
 
 ## How long it took (Kaggle)
 
 All runs were Kaggle notebooks. The full tables are in [results/TIMING.md](results/TIMING.md), built by
-`python kit/make_timing_table.py` from the saved notebooks and the `time_s` columns of the result CSVs.
+`python src/tables/make_timing_table.py` from the notebooks in `kaggle_runs/` and `results/all_results.csv`. Run 10 (idea 2 for UCI-HAR and Epilepsy-EEG) is not in this table because its notebook was not saved.
 
-| # | Kaggle run | What it did | Hardware | Time |
+| # | `kaggle_runs/` folder | What it did | Hardware | Time |
 |---|---|---|---|---|
-| 1 | `reproduction/` | Reproduction of datasets 7–12 (embeddings + Random Forest) | CPU only | 1.99 h |
-| 2 | `improvements/runs/1_ideas_1_2_first_try` | First versions of ideas 1 and 2 (4 datasets) | T4 GPU | 35.5 min |
-| 3 | `improvements/runs/2_mixer_v2` | Idea 1 (mixer v2) + plain head, datasets 7–12 | T4 GPU | 8.9 min |
-| 4 | `improvements/runs/3_idea2_cap_and_lora` | Idea 2 on CAP + idea 3 (LoRA), datasets 7–12 | T4 GPU | 1.17 h |
-| 5 | `.../4_datasets_1-6_13-18/part1` | All 7 methods on SCP1, SCP2, EMOPain, MP8, MP50, HHAR-ID/OOD | T4 GPU | 48.0 min |
-| 6 | `.../part2_failed_out_of_RAM` | PCL-ID/OOD, stopped (out of RAM) | T4 GPU | 24.6 min |
-| 7 | `.../part3_SEDFx-ID` | All 7 methods on SEDFx-ID (211,856 samples) | T4 GPU | 1.99 h |
-| 8 | `.../part4_SEDFx-OOD` | All 7 methods on SEDFx-OOD (186,584 samples) | T4 GPU | 1.82 h |
-| 9 | `.../part5_reruns` | Re-runs after memory fixes (PCL-ID/OOD, LoRA, idea 2 fill-ins) | T4 GPU | 3.30 h |
+| 01 | `reproduction_datasets_7-12` | Reproduction of datasets 7–12 (embeddings + Random Forest) | CPU only | 1.99 h |
+| 02 | `ideas_1_2_first_try` | First versions of ideas 1 and 2 (4 datasets) | T4 GPU | 35.5 min |
+| 03 | `mixer_v2` | Idea 1 (mixer v2) + plain head, datasets 7–12 | T4 GPU | 8.9 min |
+| 04 | `idea2_cap_and_lora` | Idea 2 on CAP + idea 3 (LoRA), datasets 7–12 | T4 GPU | 1.17 h |
+| 05 | `part1_seven_datasets` | All 7 methods on SCP1, SCP2, EMOPain, MP8, MP50, HHAR-ID/OOD | T4 GPU | 48.0 min |
+| 06 | `part2_PCL_failed_out_of_RAM` | PCL-ID/OOD, stopped (out of RAM) | T4 GPU | 24.6 min |
+| 07 | `part3_SEDFx-ID` | All 7 methods on SEDFx-ID (211,856 samples) | T4 GPU | 1.99 h |
+| 08 | `part4_SEDFx-OOD` | All 7 methods on SEDFx-OOD (186,584 samples) | T4 GPU | 1.82 h |
+| 09 | `part5_reruns` | Re-runs after memory fixes (PCL-ID/OOD, LoRA, idea 2 fill-ins) | T4 GPU | 3.30 h |
 |   | **Total** | | | **12.2 h** (10.2 h GPU) |
 
 Parts 1–4 ran in parallel, so everything finished in about 14 hours of calendar time (6 Nov 13:48 → 7 Nov 03:56 UTC).
@@ -166,7 +197,7 @@ GPU sessions (whose 4 CPU cores run the RF). The mixer head is the cheapest of o
 
 - Blink, FingerMovements: timeseriesclassification.com
 - UCI-HAR, Epilepsy-EEG: TF-C preprocessed files on figshare (articles 19930244, 19930199), fetched with the figshare API
-- CAP, HHAR, PCL, SEDFx: WOODS preprocessed `.h5` files (Google Drive ids in `kit/DATASETS_1-18.md`)
+- CAP, HHAR, PCL, SEDFx: WOODS preprocessed `.h5` files (Google Drive ids in `docs/DATASETS.md`)
 - EMOPain, SelfRegulationSCP1/2: timeseriesclassification.com
 - MP8, MP50: Sungu Isiacik et al. (2025), github.com/mlgig/FM4MTSC (public Google Drive folder)
 - Ego4D: not used (licence agreement required)

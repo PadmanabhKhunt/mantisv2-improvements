@@ -1,2 +1,0 @@
-dataset,method,mean,std,per_seed,paper,n_train,n_test,channels,classes,time_s,epochs,gate
-EMOPain,lora,0.863849765258216,0.0035132933209144944,"[0.8648, 0.8592, 0.8676]",0.8798,968,355,30,3,404,"[30, 21, 21]","[0.079, -0.005, -0.001]"

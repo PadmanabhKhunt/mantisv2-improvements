@@ -120,8 +120,8 @@ it.
 \textbf{Compute.} All runs were Kaggle notebooks (Table~\ref{tab:sessions}). We reproduced datasets 7--12 in a
 CPU-only session (2.0\,h, of which 56\,min was the CAP embedding) and ran everything else on free T4 GPUs. The total
 was 12.2\,h of Kaggle time, 10.2\,h of it on a GPU. Parts 1--4 ran in parallel, so all runs finished within about
-14\,h of calendar time. Each run saves its executed notebook, an HTML and PDF copy, and a CSV of results in the
-repository; \texttt{kit/make\_timing\_table.py} builds the timing tables from these files.
+14\,h of calendar time. Each run's executed notebook, with HTML and PDF copies and its result CSVs, is in the
+repository's \texttt{kaggle\_runs/} folder; scripts in \texttt{src/tables/} build every table and figure from these files.
 
 \begin{table}[t]
 \caption{Kaggle notebooks we ran, with wall-clock time (including downloads).}
@@ -313,8 +313,8 @@ mixing turned off (concatenation + channel dropout). LogReg was not run on CAP.}
 \centering
 \includegraphics[width=\columnwidth]{figures/layer_weights.pdf}
 \caption{Learned softmax weight of each transformer layer in idea 2 (mean of 3 seeds). Uniform is 0.167. Sleep-EDFx
-and PCL concentrate on the early layers; MP8 prefers the last ones. (CAP was run with an earlier script that did not
-save the weights.)}
+and PCL concentrate on the early layers; MP8 prefers the last ones. (CAP is not shown: it was run with an earlier
+script that saved the weights of one seed only.)}
 \label{fig:layers}
 \end{figure}
 
@@ -424,7 +424,7 @@ Praneet 13--18. \\
 6 Nov & Reproduction of datasets 7--12 (Colab, then Kaggle CPU). \\
 6 Nov & Improvement run 1 (first mixer and pooling; overfitted), Mixer v2, then idea 2 on CAP and LoRA on datasets
 7--12 (Kaggle GPU). \\
-6--7 Nov & Reusable kit (\texttt{kit/}); runs on datasets 1--6 and 13--18 in 5 parallel Kaggle notebooks; memory fixes
+6--7 Nov & Reusable kit (\texttt{src/mantisv2\_kit.py}); runs on datasets 1--6 and 13--18 in 5 parallel Kaggle notebooks; memory fixes
 and re-runs; final tables. \\
 7--16 Nov & Report writing, figures, review; README check; submission on Brightspace by 16 Nov. \\
 \bottomrule
