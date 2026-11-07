@@ -13,6 +13,7 @@ model with three changes on top of the pretrained encoder:
 **Status (7 Nov 2026): all experiments are done.** 17 of the 18 datasets in Tables 2 and 3 of the paper are run with
 every method; Ego4D is not run because it needs a signed licence agreement. Only the report remains.
 Full tables (with std, and the mixer gate for every dataset): **[`results/RESULTS.md`](results/RESULTS.md)**.
+Report draft (IEEE format): **[`report/main.pdf`](report/main.pdf)**, source in [`report/`](report/).
 
 ## Main results (accuracy, mean of 3 seeds)
 
@@ -99,6 +100,8 @@ improvements/
     3_idea2_cap_and_lora.py    learned pooling on CAP + LoRA on all six datasets
   runs/                        executed notebooks (.ipynb/.html/.pdf) and CSV for each run
     4_datasets_1-6_13-18/      Kaggle runs for datasets 1-6 and 13-18 (part 2 ran out of RAM; re-run in part 5)
+report/
+  main.tex, main.pdf           the report draft (IEEE format); make_figures.py builds figures/
 results/
   RESULTS.md                   final tables for all 18 datasets
   datasets_7_12_kit_results.csv   datasets 7-12 in the kit's format
