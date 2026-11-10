@@ -31,8 +31,8 @@ to our numbers.
 | 18 | SelfRegulationSCP2 | 05 | 7 × 1152 | 200 / 180 | 2 | 0.5167 | `uea` |
 
 **Check after loading:** the kit's log prints `train N, test N, channels C, classes K` for each dataset. These should
-match the table above. If they do not, the data or the split is different from the paper; write that down, because it
-is useful for the report.
+match the table above. If they do not, the data or the split differs from the paper, and the difference has to be
+recorded with the results.
 
 ---
 

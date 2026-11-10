@@ -61,7 +61,7 @@ every method; Ego4D is not run because it needs a signed licence agreement.
 | Idea 2 + mixer | 0.753 | 9 of 17 | 3 |
 | LoRA + mixer (idea 3) | **0.771** | **13 of 17** | **5** |
 
-Key findings for the report:
+Key findings:
 
 - **LoRA + mixer is the strongest improvement**: +1.5 points over the paper's protocol on average, training only
   36,864 encoder weights (0.9% of the model).

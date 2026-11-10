@@ -14,8 +14,8 @@ private notebook *MantisV2 Reproduction Datasets 7-12 Padmanabh*
 (4 cores, 31 GB RAM), run as "Save & Run All (Commit)" version 1. In an interactive test on Kaggle, FingerMovements
 (0.5500 ± 0.0082), Blink (0.9956 ± 0.0018) and UCI-HAR seed 0 (0.9033) gave **identical** numbers to Colab —
 the pipeline is deterministic across machines. CAP embeddings are saved as `cap_embeddings_Machine*.npz`
-in the Kaggle output for the improvement experiments. A standalone script version is at
-`06 - Code and Notebooks/MantisV2 Reproduction/reproduce_mantisv2.py` (for the GitHub repo).
+in the Kaggle output for the improvement experiments. The same pipeline as a
+script is `src/reproduce_mantisv2.py`.
 
 ## Protocol (from paper + official repo README)
 
@@ -55,14 +55,14 @@ embeddings with a fixed machine split and matches, which suggests the embeddings
 Timing on Kaggle CPU (torch used only 2 threads): CAP embedding 3,386 s for 40,390 samples; RF 1,596 s (CAP-ID) and
 1,681 s (CAP-OOD) for 3 seeds.
 
-Local copies (in `06 - Code and Notebooks/MantisV2 Reproduction/`): executed notebook `.ipynb`, `.html`, `.pdf`
-and `mantisv2_results_datasets_7_12.csv`.
+The executed notebook (`.ipynb`, `.html`, `.pdf`) and `mantisv2_results_datasets_7_12.csv` are in
+[`kaggle_runs/01_reproduction_datasets_7-12/`](../kaggle_runs/01_reproduction_datasets_7-12/).
 
-## Reproduction issues found (useful for the "lessons learned" section, 30% of the grade)
+## Reproduction issues found
 
 1. **Dependency clash:** `aeon` (data loader) cannot be imported on current Colab — numba requires NumPy ≤ 2.3, Colab ships NumPy 2.4. Worked around by parsing the `.ts` files directly (no change to data).
 2. **figshare blocks scripted downloads:** the TF-C `ndownloader/articles/...` zip links return HTTP 202 with an empty body (bot check) to `wget`. The official figshare REST API (`api.figshare.com/v2/articles/<id>`) gives direct per-file links that work.
 3. **Unreported split randomisation for CAP-ID:** paper says "merge all domains, 63.75% / 11.25% / 25% split" but gives no seed or stratification. We used a plain random permutation (seed 0). Sizes match; exact samples may not.
 4. **Paper's dataset table vs. TF-C files:** shapes for UCI-HAR and Epilepsy match the paper exactly (3 channels × 206 for UCI-HAR), so the paper's "preprocessed following Zhang et al. (2022)" means the TF-C figshare release.
 5. **Compute:** CAP is 19 channels × 3000 steps. Embedding all 40k samples took ~2 min on a T4, but the Random Forest on 25k × 9,728 features is slow on free Colab (2 CPU cores); the Colab UI showed "Connecting" while both cores were busy.
-6. **Default classifier variance:** with only 100 test samples, FingerMovements swings ±1 sample per seed (0.54–0.56), so the paper's 0.55 ± 0.01 is basically chance level (binary task) — worth discussing.
+6. **Default classifier variance:** with only 100 test samples, FingerMovements swings ±1 sample per seed (0.54–0.56), so the paper's 0.55 ± 0.01 is close to chance level for this binary task.

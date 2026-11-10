@@ -60,9 +60,8 @@ enough (4.2M parameters) to run on free Colab and Kaggle GPUs. Second, its code 
 (\texttt{mantis-tsfm}), so we can test whether the published numbers hold. Third, recent work argues that foundation
 models for multivariate time series classification, such as MOMENT \cite{moment}, are often compared against weak
 baselines, while simple methods such as MiniRocket \cite{minirocket} remain strong \cite{fm4mtsc,bakeoff}. Independent
-reproductions \cite{pineau} of these models therefore matter to the community. A cheap, frozen,
-general-purpose encoder would be very useful for wearable sensing and EEG, where labelled data is small and
-expensive.
+reproductions \cite{pineau} of these models are therefore needed. A cheap frozen encoder is attractive for
+wearable sensing and EEG, where labelled data is scarce and expensive to collect.
 
 Our contributions are:
 \begin{itemize}
@@ -168,7 +167,7 @@ $-$ paper in accuracy points.}
 % =====================================================================================================
 \section{Reproduction results and lessons learned}\label{sec:lessons}
 
-\textbf{What works as published.} The headline numbers hold up. On 15 of 17 datasets our accuracy is within 0.01 of
+\textbf{What works as published.} The main results reproduce. On 15 of 17 datasets our accuracy is within 0.01 of
 the paper, on 16 within 0.02, and the mean absolute difference is 0.0037 (Table~\ref{tab:repro}). On UCI-HAR, Blink,
 Epilepsy, FingerMovements and SCP1 we match the paper to four decimals, and the per-seed values are identical when
 we re-run on another machine. The pipeline is therefore deterministic given the data and the RF seed, and the paper's
@@ -333,7 +332,7 @@ datasets. The learned gate is largest on HHAR (0.12--0.18), CAP (0.11--0.15), MP
 It stays near zero on FingerMovements and SCP1/2 ($\le$0.06), where the training sets have 200--300 samples. The model
 therefore learns \emph{when} to use cross-channel structure. The largest single gain from mixing is on MP8 (+2.6
 points over the same head without mixing), where the label depends on the relative motion of body keypoints. This
-supports our hypothesis that the channel-independent design of MantisV2 leaves accuracy on the table for
+supports our hypothesis that the channel-independent design of MantisV2 loses accuracy on
 multichannel data.
 
 \textbf{Which layers matter?} Fig.~\ref{fig:layers} shows the learned layer weights of idea 2. On most small datasets
@@ -373,8 +372,7 @@ encoder.}
 took 3.3\,h, LogReg 19\,min, the head 9\,min, the mixer 14\,min, idea 2 (with the mixer) 47\,min and LoRA 4.3\,h.
 Feature extraction is cheap on a GPU: 138\,s for the 211,856 Sleep-EDFx-ID samples, against 56\,min on the CPU for
 CAP. The mixer head trains in seconds to a few minutes.
-On Sleep-EDFx-ID it is 15$\times$ faster than the RF and 1.5 points more accurate, an improvement in both accuracy and
-computational cost. LoRA is the most expensive because it runs the encoder (cut to 3 layers) in every epoch, so its
+On Sleep-EDFx-ID it is 15$\times$ faster than the RF and 1.5 points more accurate. LoRA is the most expensive because it runs the encoder (cut to 3 layers) in every epoch, so its
 cost grows with channels $\times$ samples. It took 85 minutes for 3 seeds on PCL-OOD, with 48 channels. It is still a
 small model to store: the adapters are 147\,KB per task, and the shared encoder is unchanged.
 
